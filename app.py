@@ -37,7 +37,21 @@ def compare_colors(image_path, region1, region2):
     lab_color2 = rgb2lab([[avg_color2]])[0][0]
     
     # CIEDE2000 Delta-E hesablamaq (rəng fərqi)
-    delta_e = deltaE_ciede2000(lab_color1.reshape(1, 3), lab_color2.reshape(1, 3))[0][0]
+    result = deltaE_ciede2000(lab_color1.reshape(1, 3), lab_color2.reshape(1, 3))
+    
+    # Handle the result safely regardless of whether it's a scalar or array
+    if isinstance(result, np.ndarray):
+        if result.size == 1:  # Single element array
+            delta_e = float(result.item())
+        else:
+            # If it's a multi-dimensional array, get the first element
+            try:
+                delta_e = float(result[0][0])
+            except (IndexError, TypeError):
+                delta_e = float(result.flatten()[0])
+    else:
+        # It's already a scalar
+        delta_e = float(result)
     
     threshold = 5.0  # Rəng fərqi üçün eşik dəyəri
     is_match = delta_e < threshold
@@ -101,4 +115,4 @@ def compare():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

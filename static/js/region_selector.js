@@ -10,10 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const color2Sample = document.getElementById('color2Sample');
     const deltaEValue = document.getElementById('deltaEValue');
     
-    let isSelecting = false;
+    // Avtomatik ölçülü seçim qutuları yaratmaq
+    const BOX_SIZE = 100; // Sabit qutu ölçüsü (100x100 piksel)
     let selectionNumber = 1;
-    let startX, startY;
-    
     let region1Coords = null;
     let region2Coords = null;
 
@@ -21,84 +20,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const imagePath = fabricImage.src;
     const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
     
-    // Function to handle mouse down
-    function handleMouseDown(e) {
+    // Seçim qutusunu yerləşdirmək üçün funksiya
+    function placeSelectionBox(e) {
         if (selectionNumber > 2) return;
         
-        isSelecting = true;
         const rect = fabricImage.getBoundingClientRect();
-        startX = e.clientX - rect.left;
-        startY = e.clientY - rect.top;
+        let clickX = e.clientX - rect.left;
+        let clickY = e.clientY - rect.top;
         
-        // Reset the current selection box
-        const currentSelection = selectionNumber === 1 ? selection1 : selection2;
-        currentSelection.style.left = startX + 'px';
-        currentSelection.style.top = startY + 'px';
-        currentSelection.style.width = '0';
-        currentSelection.style.height = '0';
-        currentSelection.style.display = 'block';
-    }
-    
-    // Function to handle mouse move
-    function handleMouseMove(e) {
-        if (!isSelecting) return;
+        // Şəklin sərhədləri daxilində qalmaq
+        clickX = Math.max(BOX_SIZE/2, Math.min(rect.width - BOX_SIZE/2, clickX));
+        clickY = Math.max(BOX_SIZE/2, Math.min(rect.height - BOX_SIZE/2, clickY));
         
-        const rect = fabricImage.getBoundingClientRect();
-        const currentX = e.clientX - rect.left;
-        const currentY = e.clientY - rect.top;
+        // Qutu koordinatlarını hesablamaq
+        const left = clickX - BOX_SIZE/2;
+        const top = clickY - BOX_SIZE/2;
         
-        // Calculate dimensions for the selection box
-        const width = Math.abs(currentX - startX);
-        const height = Math.abs(currentY - startY);
-        const left = Math.min(currentX, startX);
-        const top = Math.min(currentY, startY);
-        
-        // Update the selection box dimensions
+        // Seçim qutusunu göstərmək
         const currentSelection = selectionNumber === 1 ? selection1 : selection2;
         currentSelection.style.left = left + 'px';
         currentSelection.style.top = top + 'px';
-        currentSelection.style.width = width + 'px';
-        currentSelection.style.height = height + 'px';
-    }
-    
-    // Function to handle mouse up
-    function handleMouseUp(e) {
-        if (!isSelecting) return;
+        currentSelection.style.width = BOX_SIZE + 'px';
+        currentSelection.style.height = BOX_SIZE + 'px';
+        currentSelection.style.display = 'block';
         
-        isSelecting = false;
-        
-        const rect = fabricImage.getBoundingClientRect();
-        const currentX = e.clientX - rect.left;
-        const currentY = e.clientY - rect.top;
-        
-        // Calculate the final dimensions
-        const left = Math.min(currentX, startX);
-        const top = Math.min(currentY, startY);
-        const width = Math.abs(currentX - startX);
-        const height = Math.abs(currentY - startY);
-        
-        // Minimum size check (20x20 pixels)
-        if (width < 20 || height < 20) {
-            const currentSelection = selectionNumber === 1 ? selection1 : selection2;
-            currentSelection.style.display = 'none';
-            return;
-        }
-        
-        // Store the coordinates
+        // Koordinatları saxlamaq
         const region = [
             Math.round(left),
             Math.round(top),
-            Math.round(left + width),
-            Math.round(top + height)
+            Math.round(left + BOX_SIZE),
+            Math.round(top + BOX_SIZE)
         ];
         
+        // Seçimi qeyd etmək
         if (selectionNumber === 1) {
             region1Coords = region;
             selectionNumber = 2;
+            alert('Birinci parça bölgəsi seçildi! İndi ikinci parça bölgəsini seçin.');
         } else {
             region2Coords = region;
-            selectionNumber = 3; // Both regions selected
+            selectionNumber = 3; // Hər iki bölgə seçildi
             compareBtn.disabled = false;
+            alert('İkinci parça bölgəsi seçildi! İndi "Müqayisə Et" düyməsinə klikləyin.');
         }
     }
     
@@ -111,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectionNumber = 1;
         compareBtn.disabled = true;
         resultContainer.style.display = 'none';
+        alert('Seçimlər sıfırlandı. Yenidən birinci parça bölgəsini seçin.');
     });
     
     // Compare regions
@@ -163,35 +127,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Setup event listeners
-    fabricImage.addEventListener('mousedown', handleMouseDown);
-    fabricImage.addEventListener('mousemove', handleMouseMove);
-    fabricImage.addEventListener('mouseup', handleMouseUp);
+    // Şəkil üzərində klik hadisəsi
+    fabricImage.addEventListener('click', placeSelectionBox);
     
-    // Add touch support for mobile devices
-    fabricImage.addEventListener('touchstart', function(e) {
-        const touch = e.touches[0];
-        handleMouseDown({
-            clientX: touch.clientX,
-            clientY: touch.clientY
-        });
-        e.preventDefault();
-    });
-    
-    fabricImage.addEventListener('touchmove', function(e) {
-        const touch = e.touches[0];
-        handleMouseMove({
-            clientX: touch.clientX,
-            clientY: touch.clientY
-        });
-        e.preventDefault();
-    });
-    
+    // Mobil cihazlar üçün dəstək
     fabricImage.addEventListener('touchend', function(e) {
-        handleMouseUp({
+        e.preventDefault();
+        placeSelectionBox({
             clientX: e.changedTouches[0].clientX,
             clientY: e.changedTouches[0].clientY
         });
-        e.preventDefault();
     });
+    
+    // Başlanğıcda istifadəçiyə yol göstərmək
+    setTimeout(function() {
+        alert('Birinci parça bölgəsini seçmək üçün şəkil üzərində klikləyin. Avtomatik olaraq 100x100 piksel bölgə seçiləcək.');
+    }, 1000);
 });
