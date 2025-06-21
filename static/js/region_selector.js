@@ -1,42 +1,41 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const fabricImage = document.getElementById('fabricImage');
+    // Selection elements
+    const capturedImage = document.getElementById('capturedImage');
     const selection1 = document.getElementById('selection1');
     const selection2 = document.getElementById('selection2');
-    const resetBtn = document.getElementById('resetBtn');
+    const resetSelectionsBtn = document.getElementById('resetSelectionsBtn');
     const compareBtn = document.getElementById('compareBtn');
-    const resultContainer = document.getElementById('resultContainer');
+    
+    // Result elements
     const resultContent = document.getElementById('resultContent');
     const color1Sample = document.getElementById('color1Sample');
     const color2Sample = document.getElementById('color2Sample');
     const deltaEValue = document.getElementById('deltaEValue');
     
-    // Avtomatik ölçülü seçim qutuları yaratmaq
-    const BOX_SIZE = 100; // Sabit qutu ölçüsü (100x100 piksel)
+    // Selection variables
+    const BOX_SIZE = 60; // Smaller selection box size (60x60 pixels)
     let selectionNumber = 1;
     let region1Coords = null;
     let region2Coords = null;
-
-    // Get the filename from the URL
-    const imagePath = fabricImage.src;
-    const filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+    let capturedImageBlob = null;
     
-    // Seçim qutusunu yerləşdirmək üçün funksiya
+    // Place selection box on image
     function placeSelectionBox(e) {
         if (selectionNumber > 2) return;
         
-        const rect = fabricImage.getBoundingClientRect();
+        const rect = capturedImage.getBoundingClientRect();
         let clickX = e.clientX - rect.left;
         let clickY = e.clientY - rect.top;
         
-        // Şəklin sərhədləri daxilində qalmaq
+        // Keep within image boundaries
         clickX = Math.max(BOX_SIZE/2, Math.min(rect.width - BOX_SIZE/2, clickX));
         clickY = Math.max(BOX_SIZE/2, Math.min(rect.height - BOX_SIZE/2, clickY));
         
-        // Qutu koordinatlarını hesablamaq
+        // Calculate box coordinates
         const left = clickX - BOX_SIZE/2;
         const top = clickY - BOX_SIZE/2;
         
-        // Seçim qutusunu göstərmək
+        // Show selection box
         const currentSelection = selectionNumber === 1 ? selection1 : selection2;
         currentSelection.style.left = left + 'px';
         currentSelection.style.top = top + 'px';
@@ -44,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSelection.style.height = BOX_SIZE + 'px';
         currentSelection.style.display = 'block';
         
-        // Koordinatları saxlamaq
+        // Store coordinates
         const region = [
             Math.round(left),
             Math.round(top),
@@ -52,86 +51,110 @@ document.addEventListener('DOMContentLoaded', function() {
             Math.round(top + BOX_SIZE)
         ];
         
-        // Seçimi qeyd etmək
+        // Set selection region
         if (selectionNumber === 1) {
             region1Coords = region;
             selectionNumber = 2;
-            alert('Birinci parça bölgəsi seçildi! İndi ikinci parça bölgəsini seçin.');
+            showToast('Birinci bölgə seçildi! İndi ikinci bölgəni seçin.');
         } else {
             region2Coords = region;
-            selectionNumber = 3; // Hər iki bölgə seçildi
+            selectionNumber = 3; // Both regions selected
             compareBtn.disabled = false;
-            alert('İkinci parça bölgəsi seçildi! İndi "Müqayisə Et" düyməsinə klikləyin.');
+            showToast('İkinci bölgə seçildi! İndi "Müqayisə Et" düyməsinə klikləyin.');
         }
     }
     
-    // Reset selections
-    resetBtn.addEventListener('click', function() {
+    // Reset selections function
+    function resetSelections() {
         selection1.style.display = 'none';
         selection2.style.display = 'none';
         region1Coords = null;
         region2Coords = null;
         selectionNumber = 1;
         compareBtn.disabled = true;
-        resultContainer.style.display = 'none';
-        alert('Seçimlər sıfırlandı. Yenidən birinci parça bölgəsini seçin.');
-    });
+    }
     
-    // Compare regions
-    compareBtn.addEventListener('click', function() {
+    // Show a toast notification instead of an alert
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-message';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+    
+    // Compare the selected regions
+    function compareRegions() {
         if (!region1Coords || !region2Coords) return;
         
-        // Send data to server
-        fetch('/compare', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                filename: filename,
-                region1: region1Coords,
-                region2: region2Coords
+        // Get the captured image as blob
+        window.getCapturedImageBlob(function(blob) {
+            // Create form data with the image blob
+            const formData = new FormData();
+            formData.append('image', blob, 'camera_capture.jpg');
+            formData.append('region1', JSON.stringify(region1Coords));
+            formData.append('region2', JSON.stringify(region2Coords));
+            
+            // Send to server for processing
+            fetch('/compare_regions', {
+                method: 'POST',
+                body: formData
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Display results
-            resultContainer.style.display = 'block';
-            
-            // Set color samples
-            const rgb1 = data.avg_color1;
-            const rgb2 = data.avg_color2;
-            color1Sample.style.backgroundColor = `rgb(${rgb1[0]}, ${rgb1[1]}, ${rgb1[2]})`;
-            color2Sample.style.backgroundColor = `rgb(${rgb2[0]}, ${rgb2[1]}, ${rgb2[2]})`;
-            
-            // Set delta E value
-            deltaEValue.textContent = data.delta_e.toFixed(2);
-            
-            // Show match result
-            if (data.is_match) {
-                resultContent.textContent = 'Bu parçalar eyni rəngdədir!';
-                resultContent.classList.add('match');
-                resultContent.classList.remove('no-match');
-            } else {
-                resultContent.textContent = 'Bu parçalar fərqli rəngdədir!';
-                resultContent.classList.add('no-match');
-                resultContent.classList.remove('match');
-            }
-            
-            // Scroll to result
-            resultContainer.scrollIntoView({ behavior: 'smooth' });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+            .then(response => response.json())
+            .then(data => {
+                // Display results
+                const rgb1 = data.avg_color1;
+                const rgb2 = data.avg_color2;
+                
+                // Set color samples
+                color1Sample.style.backgroundColor = `rgb(${rgb1[0]}, ${rgb1[1]}, ${rgb1[2]})`;
+                color2Sample.style.backgroundColor = `rgb(${rgb2[0]}, ${rgb2[1]}, ${rgb2[2]})`;
+                
+                // Set delta E value
+                deltaEValue.textContent = data.delta_e.toFixed(2);
+                
+                // Show match result
+                if (data.is_match) {
+                    resultContent.textContent = 'Bu parçalar eyni rəngdədir!';
+                    resultContent.classList.add('match');
+                    resultContent.classList.remove('no-match');
+                } else {
+                    resultContent.textContent = 'Bu parçalar fərqli rəngdədir!';
+                    resultContent.classList.add('no-match');
+                    resultContent.classList.remove('match');
+                }
+                
+                // Show the results step
+                if (window.showResultStep) {
+                    window.showResultStep();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+            });
         });
-    });
+    }
     
-    // Şəkil üzərində klik hadisəsi
-    fabricImage.addEventListener('click', placeSelectionBox);
+    // Event listeners
+    resetSelectionsBtn.addEventListener('click', resetSelections);
+    compareBtn.addEventListener('click', compareRegions);
     
-    // Mobil cihazlar üçün dəstək
-    fabricImage.addEventListener('touchend', function(e) {
+    // Image click events
+    capturedImage.addEventListener('click', placeSelectionBox);
+    
+    // Mobile support
+    capturedImage.addEventListener('touchend', function(e) {
         e.preventDefault();
         placeSelectionBox({
             clientX: e.changedTouches[0].clientX,
@@ -139,8 +162,40 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Başlanğıcda istifadəçiyə yol göstərmək
+    // Show initial guidance after a short delay
     setTimeout(function() {
-        alert('Birinci parça bölgəsini seçmək üçün şəkil üzərində klikləyin. Avtomatik olaraq 100x100 piksel bölgə seçiləcək.');
+        showToast('Birinci parça bölgəsini seçmək üçün şəkil üzərində klikləyin.');
     }, 1000);
+    
+    // Make reset function available to camera.js
+    window.resetSelections = resetSelections;
+    
+    // Add toast style to document if it doesn't exist
+    if (!document.getElementById('toastStyle')) {
+        const style = document.createElement('style');
+        style.id = 'toastStyle';
+        style.textContent = `
+            .toast-message {
+                position: fixed;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%) translateY(100px);
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 25px;
+                z-index: 1000;
+                opacity: 0;
+                transition: all 0.3s ease;
+                text-align: center;
+                max-width: 90%;
+                font-weight: 500;
+            }
+            .toast-message.show {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 });
