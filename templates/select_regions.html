@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parça Bölgələrini Seçin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="text-center mb-0">Parça Bölgələrini Seçin</h1>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-center">Şəkildən iki parçanı seçmək üçün hər bölgəyə bir qutu çəkin.</p>
+                        
+                        <div class="instructions mb-3">
+                            <ol>
+                                <li>İlk parça bölgəsini seçmək üçün şəkil üzərində klikləyib çəkin.</li>
+                                <li>İkinci parça bölgəsini seçmək üçün eyni hərəkəti təkrarlayın.</li>
+                                <li>"Müqayisə Et" düyməsinə klikləyin.</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="image-container position-relative mb-3">
+                            <img id="fabricImage" src="{{ url_for('static', filename='uploads/' + filename) }}" class="img-fluid" alt="Parça şəkli">
+                            <div id="selection1" class="selection-box" style="display: none;"></div>
+                            <div id="selection2" class="selection-box" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button id="resetBtn" class="btn btn-secondary">Seçimləri Sıfırla</button>
+                            <button id="compareBtn" class="btn btn-success" disabled>Müqayisə Et</button>
+                        </div>
+                        
+                        <div id="resultContainer" class="mt-4" style="display: none;">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="mb-0">Müqayisə Nəticəsi</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div id="resultContent"></div>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-6">
+                                            <div class="color-sample mb-2" id="color1Sample"></div>
+                                            <p>1-ci Parça Ortalama Rəngi</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="color-sample mb-2" id="color2Sample"></div>
+                                            <p>2-ci Parça Ortalama Rəngi</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3">
+                                        <p><strong>Rəng Fərqi (Delta-E):</strong> <span id="deltaEValue"></span></p>
+                                        <p><small>Delta-E < 5.0 olduqda rənglər eyni hesab olunur.</small></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <a href="{{ url_for('index') }}" class="btn btn-primary">Yeni Şəkil Yüklə</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/region_selector.js') }}"></script>
+</body>
+</html>
