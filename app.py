@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 import base64
+import json
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 from skimage.color import rgb2lab, deltaE_ciede2000
@@ -79,10 +80,27 @@ def compare_regions():
     
     # Parse region coordinates from the request
     try:
-        region1 = json.loads(request.form.get('region1'))
-        region2 = json.loads(request.form.get('region2'))
+        region1_str = request.form.get('region1')
+        region2_str = request.form.get('region2')
+        
+        if not region1_str or not region2_str:
+            return jsonify({'error': 'Bölgə koordinatları daxil edilməyib'}), 400
+            
+        region1 = json.loads(region1_str)
+        region2 = json.loads(region2_str)
+        
+        # Validate coordinates format
+        if not isinstance(region1, list) or len(region1) != 4 or not all(isinstance(x, (int, float)) for x in region1):
+            return jsonify({'error': 'Bölgə 1 koordinatları düzgün formatda deyil'}), 400
+            
+        if not isinstance(region2, list) or len(region2) != 4 or not all(isinstance(x, (int, float)) for x in region2):
+            return jsonify({'error': 'Bölgə 2 koordinatları düzgün formatda deyil'}), 400
+            
+    except json.JSONDecodeError:
+        return jsonify({'error': 'Bölgə koordinatları JSON formatında deyil'}), 400
     except Exception as e:
-        return jsonify({'error': 'Bölgə koordinatları düzgün formatda deyil'}), 400
+        app.logger.error(f"Error parsing region coordinates: {str(e)}")
+        return jsonify({'error': 'Bölgə koordinatları emal edilərkən xəta baş verdi'}), 400
     
     # Read the image data into memory
     image_data = image_file.read()

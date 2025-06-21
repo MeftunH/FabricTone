@@ -177,22 +177,25 @@ document.addEventListener('DOMContentLoaded', function() {
         style.textContent = `
             .toast-message {
                 position: fixed;
-                bottom: 30px;
-                left: 50%;
-                transform: translateX(-50%) translateY(100px);
-                background-color: rgba(0, 0, 0, 0.8);
+                top: 30px;
+                right: 30px;
+                transform: translateX(120%);
+                background-color: rgba(0, 0, 0, 0.85);
                 color: white;
-                padding: 12px 20px;
-                border-radius: 25px;
+                padding: 12px 24px;
+                border-radius: 8px;
                 z-index: 1000;
                 opacity: 0;
-                transition: all 0.3s ease;
-                text-align: center;
-                max-width: 90%;
+                transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+                text-align: left;
+                max-width: 350px;
                 font-weight: 500;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                backdrop-filter: blur(10px);
+                border-left: 4px solid var(--accent-color);
             }
             .toast-message.show {
-                transform: translateX(-50%) translateY(0);
+                transform: translateX(0);
                 opacity: 1;
             }
         `;
