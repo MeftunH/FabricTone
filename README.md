@@ -1,64 +1,109 @@
-# FabricTone / Kumaş Tonu Karşılaştırıcı
+# FabricTone
 
-A modern web application for comparing colors between two regions of fabric using camera capture. / Kamera kullanarak iki farklı kumaş bölgesinin renklerini karşılaştırmak için modern bir web uygulaması.
+A modern web application for comparing colors between two regions of fabric using camera capture.
 
-## Features / Özellikler
+## Features
 
-- Camera-based image capture for fabric analysis / Kumaş analizi için kamera ile görüntü yakalama
-- Interactive region selection for color comparison / Renk karşılaştırması için etkileşimli bölge seçimi
-- Color difference calculation using the CIEDE2000 Delta-E metric / CIEDE2000 Delta-E metrikleri ile renk farkı hesaplama
-- Modern, responsive user interface / Modern, duyarlı kullanıcı arayüzü
-- No server-side image storage for privacy / Gizlilik için sunucu tarafında görüntü depolama yok
+- Camera-based image capture for fabric analysis
+- Interactive region selection for color comparison
+- Color difference calculation using CIEDE2000 Delta-E metric
+- Responsive user interface
+- Client-side processing for privacy
 
-## Technical Details / Teknik Detaylar
+## Technical Stack
 
-- Built with Flask (Python) / Flask (Python) ile oluşturuldu
-- Uses OpenCV and scikit-image for color processing / Renk işleme için OpenCV ve scikit-image kullanır
-- Front-end with modern JavaScript, HTML5 and CSS3 / Modern JavaScript, HTML5 ve CSS3 ile ön yüz
-- Camera API for direct image capture / Doğrudan görüntü yakalama için Kamera API'si
+- **Backend**: Python Flask
+- **Computer Vision**: OpenCV, scikit-image
+- **Frontend**: HTML5, CSS3, JavaScript
+- **API**: Camera API for image capture
 
-## Deployment / Dağıtım
+## Local Development
 
-### Local Development / Yerel Geliştirme
+### Prerequisites
 
-1. Clone the repository / Depoyu klonlayın:
-   ```
+- Python 3.9+
+- pip (Python package manager)
+
+### Setup
+
+1. Clone the repository:
+   ```bash
    git clone https://github.com/yourusername/FabricTone.git
    cd FabricTone
    ```
-2. Install dependencies / Bağımlılıkları yükleyin:
+
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   # On Windows: venv\Scripts\activate
+   # On macOS/Linux: source venv/bin/activate
    ```
+
+3. Install dependencies:
+   ```bash
    pip install -r requirements.txt
    ```
-3. Run the application / Uygulamayı çalıştırın:
-   ```
+
+4. Run the application:
+   ```bash
    python app.py
    ```
-4. Access at / Şu adresten erişin: http://localhost:5001
 
-### Production Deployment / Canlıya Alma
+5. Open your browser and navigate to:
+   ```
+   http://localhost:5001
+   ```
 
-#### Render.com Deployment / Render.com'a Dağıtım
+## Production Deployment
 
-1. Create a new Web Service on Render.com / Render.com'da yeni bir Web Servisi oluşturun
-2. Connect your GitHub repository / GitHub deponuzu bağlayın
-3. Configure the deployment settings / Dağıtım ayarlarını yapılandırın:
+### Render.com
+
+1. Create a new Web Service on Render.com
+2. Connect your GitHub repository
+3. Configure deployment settings:
+   - **Runtime**: Python 3
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `gunicorn app:app`
-   - **Environment Variables / Ortam Değişkenleri**:
+   - **Environment Variables**:
      - `PYTHON_VERSION`: `3.9.0`
-4. Click "Create Web Service" / "Web Servisi Oluştur"a tıklayın
 
-#### Required Files / Gerekli Dosyalar
+## Required Files
 
-- `requirements.txt` (with all dependencies including gunicorn) / (gunicorn dahil tüm bağımlılıklarla birlikte)
-- `Procfile` (with the command: `web: gunicorn app:app`)
-- `wsgi.py` (entry point for gunicorn) / (gunicorn için giriş noktası)
+### requirements.txt
+```
+Flask==2.0.1
+opencv-python-headless==4.5.3.56
+scikit-image==0.18.3
+numpy>=1.19.2
+gunicorn==20.1.0
+```
 
-## Note / Not
+### Procfile
+```
+web: gunicorn app:app
+```
 
-This application requires camera access, which browsers only allow on secure origins (HTTPS) or localhost during development. / Bu uygulama kamera erişimi gerektirir, tarayıcılar bunu sadece güvenli kökenlerde (HTTPS) veya geliştirme sırasında localhost'ta izin verir.
+### wsgi.py
+```python
+from app import app
 
-## Support / Destek
+if __name__ == "__main__":
+    app.run()
+```
 
-For support, please open an issue in the GitHub repository. / Destek için lütfen GitHub deposunda bir konu açın.
+## Browser Compatibility
+
+- Chrome (latest)
+- Firefox (latest)
+- Edge (latest)
+- Safari (latest)
+
+**Note**: HTTPS is required for camera access in production environments.
+
+## Support
+
+For issues and feature requests, please use the [issue tracker](https://github.com/yourusername/FabricTone/issues).
+
+## License
+
+[Your License Here]
